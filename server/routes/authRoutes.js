@@ -4,31 +4,17 @@ const User = require('../models/User');
 const OTP = require('../models/OTP');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 const crypto = require('crypto');
 
 require('dotenv').config();
 
 const router = express.Router();
 
-// --- Nodemailer Transporter (no changes) ---
-const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false,
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    },
-    tls: { rejectUnauthorized: false }
-});
+// --- Resend Transporter ---
+const resend = new Resend(process.env.RESEND_API_KEY);
 
-transporter.verify((error, success) => {
-    if (error) console.error("❌ Nodemailer verification failed:", error);
-    else console.log("✅ Nodemailer transporter is ready");
-});
-
-// --- Send OTP (no changes) ---
+// --- Send OTP ---
 router.post('/send-otp', async (req, res) => {
     const { email } = req.body;
     try {
@@ -36,16 +22,15 @@ router.post('/send-otp', async (req, res) => {
         await OTP.deleteOne({ email });
         const newOTP = new OTP({ email, otp: otpCode });
         await newOTP.save();
-        const mailOptions = {
-            from: `"Carzi" <${process.env.EMAIL_USER}>`,
+        await resend.emails.send({
+            from: 'onboarding@resend.dev',
             to: email,
             subject: 'Your Carzi Verification Code',
             html: `<p>Your verification code is: <b>${otpCode}</b></p><p>This code is valid for 5 minutes.</p>`
-        };
-        await transporter.sendMail(mailOptions);
+        });
         res.status(200).json({ success: true, message: 'OTP sent successfully.' });
     } catch (err) {
-        console.error("❌ Nodemailer failed:", err);
+        console.error("❌ Resend failed:", err);
         res.status(500).json({ success: false, message: 'Failed to send OTP', error: err.message });
     }
 });
@@ -209,11 +194,10 @@ router.post('/forgot-password', [
         `;
 
         try {
-            await transporter.sendMail({
-                from: `"Carzi" <${process.env.EMAIL_USER}>`,
+            await resend.emails.send({
+                from: 'onboarding@resend.dev',
                 to: user.email,
                 subject: 'Password Reset Request',
-                text: message,
                 html: `<p>You are receiving this email because you (or someone else) has requested the reset of a password.</p>
                        <p>Please click on this link to reset your password: <a href="${resetUrl}">${resetUrl}</a></p>
                        <p>This link will expire in 1 hour.</p>`
