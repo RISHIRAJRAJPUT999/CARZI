@@ -42,6 +42,8 @@ export const useBookingContext = () => {
   return context;
 };
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [customerBookings, setCustomerBookings] = useState<Booking[]>([]);
   const [ownerBookings, setOwnerBookings] = useState<Booking[]>([]);
@@ -51,8 +53,8 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
     if (!token) return;
     try {
       const [customerRes, ownerRes] = await Promise.all([
-        fetch('http://localhost:5000/api/bookings/my-bookings', { headers: { Authorization: `Bearer ${token}` } }),
-        fetch('http://localhost:5000/api/bookings/owner-bookings', { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${API_URL}/api/bookings/my-bookings`, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${API_URL}/api/bookings/owner-bookings`, { headers: { Authorization: `Bearer ${token}` } }),
       ]);
       if (customerRes.ok) setCustomerBookings(await customerRes.json());
       if (ownerRes.ok) setOwnerBookings(await ownerRes.json());
@@ -70,7 +72,7 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const createBooking = async (bookingData: any): Promise<boolean> => {
     if (!token) return false;
     try {
-      const response = await fetch('http://localhost:5000/api/bookings', {
+      const response = await fetch(`${API_URL}/api/bookings`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -93,7 +95,7 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
     if (!token) return false;
 
     try {
-        const response = await fetch(`http://localhost:5000/api/bookings/${bookingId}/pay`, {
+        const response = await fetch(`${API_URL}/api/bookings/${bookingId}/pay`, {
             method: 'PUT',
             headers: {
                 'Authorization': `Bearer ${token}`

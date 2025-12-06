@@ -61,13 +61,15 @@ export const useCarContext = () => {
   return context;
 };
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 export const CarProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [cars, setCars] = useState<Car[]>([]);
   const { token, user } = useAuth();
 
   const fetchCars = async () => {
     try {
-        const response = await fetch('http://localhost:5000/api/cars');
+        const response = await fetch(`${API_URL}/api/cars`);
         const data = await response.json();
         setCars(data);
     } catch (error) {
@@ -99,7 +101,7 @@ export const CarProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       formData.append('images', imageFiles[i]);
     }
 
-    const response = await fetch('http://localhost:5000/api/cars', {
+    const response = await fetch(`${API_URL}/api/cars`, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${token}` },
       body: formData,
@@ -116,7 +118,7 @@ export const CarProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (!token) return;
 
     try {
-      const response = await fetch(`http://localhost:5000/api/cars/${carId}`, {
+      const response = await fetch(`${API_URL}/api/cars/${carId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -139,7 +141,7 @@ export const CarProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (!token) return;
 
     try {
-      const response = await fetch(`http://localhost:5000/api/cars/${carId}`, {
+      const response = await fetch(`${API_URL}/api/cars/${carId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
